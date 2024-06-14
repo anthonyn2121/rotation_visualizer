@@ -2,21 +2,25 @@ import numpy as np
 from numpy import cos, sin
 
 class Rotation(object):
-    def __init__(self):
-        pass
+    def __init__(self, rotation_matrix=None):
+        self.rotation_matrix = rotation_matrix
+        self.T = np.transpose(self.rotation_matrix)
 
-    @staticmethod
-    def from_euler(angles, seq:str='zyx', degrees:bool=False):
+    def as_array(self):
+        return self.rotation_matrix
+    
+    @classmethod
+    def from_euler(cls, angles, seq:str='zyx', degrees:bool=False):
         if degrees:
             angles = np.asarray(angles) * (np.pi/180)
 
-        mats = {'x':Rotation._Rx, 'y':Rotation._Ry, 'z':Rotation._Rz}
+        mats = {'x':cls.__Rx, 'y':cls.__Ry, 'z':cls.__Rz}
         matrix = np.eye(3)
         for axis, angle in zip(seq, angles):
             matrix = np.dot(mats[axis](angle), matrix)
-        return matrix
+        R = cls(matrix)
+        return R
 
-    @staticmethod
     def __Rx(angle):
         Rx = np.array([[1, 0, 0],
                     [0, cos(angle), -sin(angle)],
@@ -24,14 +28,12 @@ class Rotation(object):
                     ])
         return Rx
     
-    @staticmethod
     def __Ry(angle):
         Ry = np.array([[cos(angle), 0, sin(angle)],
                        [0, 1, 0],
                        [-sin(angle), 0, cos(angle)]])
         return Ry
     
-    @staticmethod
     def __Rz(angle):
         Rz = np.array([[cos(angle), -sin(angle), 0],
                        [sin(angle), cos(angle), 0],
@@ -39,4 +41,5 @@ class Rotation(object):
         return Rz
     
 if __name__ == "__main__":
-    print(Rotation._Rx(np.pi))
+    test = Rotation.from_euler([45, 0, 0], 'zyx', True)
+    print(test.as_array())
