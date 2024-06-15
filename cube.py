@@ -1,3 +1,4 @@
+import argparse
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
@@ -47,8 +48,35 @@ cube_vertices = np.array([
 
 if __name__ == "__main__":
     # Run this file to visualize rotation
-    ax = plot_cube(cube_vertices, alpha=0.2)
-    R = Rotation.from_euler([45, 45, 15], 'xyz', degrees=True)
-    cube_vertices = np.dot(np.asarray(cube_vertices), np.transpose(R.as_array()))
-    ax = plot_cube(cube_vertices, ax, 1.0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--transforms', '-t', type=float, nargs='+', action='append', help="sequence of transformations. Must be ONLY euler angles or ONLY quaternions")
+    parser.add_argument('--sequence', '-s', default='zyx', help="Order of axis to apply rotations")
+    parser.add_argument('--degrees', '-d', type=bool, default=True, help="If using euler angles, are your angles expressed in degrees?")
+    args = parser.parse_args()
+
+    transformations = np.asarray(args.transforms)
+    alpha = 0.5
+    ax = plot_cube(cube_vertices, alpha=alpha)
+    rotations = []
+    if transformations.shape[1] == 3:
+        rotations= [Rotation.from_euler(t, args.sequence, degrees=args.degrees) for t in transformations]
+    elif transformations.shape[1] == 4:
+        rotations= [Rotation.from_quat(t) for t in transformations]
+    
+
+    from matplotlib.animation import FuncAnimation
+    def animate(frame):
+        ax.clear()
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        if len(rotations) > 0:
+            rot = rotations[frame % len(rotations)]
+            new_vertices = cube_vertices @ np.transpose(rot.as_array())
+            plot_cube(new_vertices, ax=ax, alpha=alpha)
+        else:
+            plot_cube(cube_vertices, ax)
+
+    anim = FuncAnimation(ax.get_figure(), animate, frames=len(rotations), interval=100)
+    anim.save('cube_rotation.gif', fps=5)
     plt.show(block=True)
