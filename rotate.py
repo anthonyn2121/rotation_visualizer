@@ -96,5 +96,6 @@ class Rotation(object):
         return Rz
     
 if __name__ == "__main__":
+    ## Run this file just to test
     test = Rotation.from_euler([45, 0, 0], 'zyx', True)
     print(test.as_array())
