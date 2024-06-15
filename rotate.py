@@ -7,13 +7,11 @@ class Rotation(object):
         if np.any(rotation_matrix):
             assert rotation_matrix.shape == (3,3), "RotationMatrix is not a 3x3"
             self.rotation_matrix = rotation_matrix
-            self.T = np.transpose(self.rotation_matrix)
             self.quat = self.__rotm2quat(self.rotation_matrix)
         elif np.any(quat):
             assert len(quat) == 4, "Quaternion does not have 4 elements"
             self.quat = quat
             self.rotation_matrix = self.__quat2rotm(self.quat)
-            self.T = np.array([-quat[0], -quat[1], -quat[2], quat[-1]]) / np.sum(quat*quat)
 
     def as_array(self):
         return self.rotation_matrix
@@ -21,6 +19,9 @@ class Rotation(object):
     def as_quat(self):
         return self.quat
     
+    def inv(self):
+        return Rotation(rotation_matrix=np.transpose(self.rotation_matrix))
+
     @classmethod
     def from_euler(cls, angles, seq:str='zyx', degrees:bool=False):
         if degrees:
